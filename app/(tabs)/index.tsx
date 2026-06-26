@@ -1,13 +1,8 @@
-import { MaterialIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
+
+import TaskForm from "../../components/TaskForm";
+import TaskItem from "../../components/TaskItem";
 import { supabase } from "../../lib/supabase";
 
 type Task = {
@@ -38,10 +33,9 @@ export default function HomeScreen() {
       return;
     }
 
-    setTasks(data);
+    setTasks(data ?? []);
   }
 
-  // Load tasks once
   useEffect(() => {
     loadTasks();
   }, []);
@@ -71,7 +65,7 @@ export default function HomeScreen() {
   // ==========================
   // UPDATE - Toggle completed
   // ==========================
-  async function toggleTask(item: any) {
+  async function toggleTask(item: Task) {
     const { error } = await supabase
       .from("tasks")
       .update({
@@ -101,6 +95,11 @@ export default function HomeScreen() {
     loadTasks();
   }
 
+  // Wrapper function (Phase 6)
+  function handleAddTask() {
+    addTask();
+  }
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -108,39 +107,15 @@ export default function HomeScreen() {
         <Text style={headerStyles.title}>TaskFlow</Text>
       </View>
 
-      {/* Input */}
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Task"
-          value={task}
-          onChangeText={setTask}
-        />
-
-        <TouchableOpacity style={styles.addButton} onPress={addTask}>
-          <MaterialIcons name="add" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
+      {/* Task Form */}
+      <TaskForm task={task} setTask={setTask} onAdd={handleAddTask} />
 
       {/* Task List */}
       <FlatList
         data={tasks}
-        keyExtractor={(item: any) => item.id.toString()}
-        renderItem={({ item }: any) => (
-          <TouchableOpacity
-            onPress={() => toggleTask(item)}
-            onLongPress={() => deleteTask(item.id)}
-          >
-            <View style={styles.taskRow}>
-              <MaterialIcons
-                name={item.completed ? "check-box" : "check-box-outline-blank"}
-                size={22}
-                color={item.completed ? "#2E5BBA" : "#5A6472"}
-              />
-
-              <Text style={styles.taskText}>{item.title}</Text>
-            </View>
-          </TouchableOpacity>
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <TaskItem item={item} onToggle={toggleTask} onDelete={deleteTask} />
         )}
       />
     </View>
@@ -168,43 +143,5 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 20,
-  },
-
-  inputRow: {
-    flexDirection: "row",
-    marginBottom: 25,
-  },
-
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    marginRight: 10,
-    fontSize: 16,
-  },
-
-  addButton: {
-    width: 50,
-    backgroundColor: "#2E5BBA",
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  taskRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
-  },
-
-  taskText: {
-    fontSize: 16,
-    color: "#333333",
   },
 });
